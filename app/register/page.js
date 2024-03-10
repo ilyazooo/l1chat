@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-
+import { useRouter } from 'next/navigation';
 
 const Home = () => {
 
 
+    const router = useRouter();
 
     const [formData, setFormData] = useState({
         username: '',
@@ -56,7 +57,7 @@ const Home = () => {
                 throw new Error('Erreur lors de l\'inscription');
             }
     
-            alert('Inscription réussie !');
+            router.push('/login');
         } catch (error) {
             alert('Erreur lors de l\'inscription : ' + error.message);
         }

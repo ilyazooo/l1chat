@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-
+import { useRouter } from 'next/navigation';
 
 const Home = () => {
 
-
-
+    
+    const router = useRouter();
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -46,7 +46,7 @@ const Home = () => {
   
             localStorage.setItem('authToken', authToken);
     
-            alert('Connexion réussie !');
+            router.push('/');
     
         } catch (error) {
             alert('Erreur lors de la connexion : ' + error.message);
