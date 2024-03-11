@@ -25,12 +25,25 @@ const Home = () => {
 
   useEffect(() => {
 
-    getConnectedUser();
-    fetchConversations();
-
+    const fetchData = async () => {
+      await getConnectedUser();
+    };
+    fetchData();
 
   }, []);
 
+
+  useEffect(() => {
+
+    const fetchData = async () => {
+      
+      if (username != ''){
+      await fetchConversations();
+      }
+    };
+
+    fetchData();
+  }, [username]);
 
   const handleLoading = () => {
     setIsLoading(true);
@@ -66,6 +79,7 @@ const Home = () => {
 
   const getConnectedUser = async () => {
     const authToken = localStorage.getItem('authToken');
+
     try {
 
       const response = await fetch('http://localhost:3000/api/valideToken', {
@@ -158,8 +172,9 @@ const Home = () => {
 
   const fetchConversations = async () => {
     handleLoading();
+    console.log(username);
     try {
-      const response = await fetch(`http://localhost:3000/api/conversations?senderUsername=${username}&receiverUsername=${receiverUsername}`);
+      const response = await fetch(`http://localhost:3000/api/conversations?senderUsername=${username}`);
       if (response.ok) {
         const data = await response.json();
         await setConversations(data);
@@ -257,7 +272,7 @@ const Home = () => {
     } else {
       console.warn('Le message est vide');
     }
-    
+
     await fetchConversations();
     setNewMessage("");
     setNewUsername("");
@@ -269,9 +284,9 @@ const Home = () => {
 
   const setConversation = async (conversation) => {
     //handleLoading();
-    setActiveConversation(conversation.receiverUsername);
+    setActiveConversation(username === conversation.receiverUsername ? conversation.senderUsername : conversation.receiverUsername);
 
-    await setReceiverUsername(conversation.receiverUsername);
+    await setReceiverUsername(username === conversation.receiverUsername ? conversation.senderUsername : conversation.receiverUsername);
 
     //await fetchMessages();
     scrollToBottom();
@@ -317,7 +332,7 @@ const Home = () => {
         <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="editor mx-auto w-10/12 flex flex-col text-gray-800 p-4 shadow-lg max-w-2xl rounded-md bg-[#cfdf8f]">
             <input
-              className="title bg-gray-100 p-2 mb-4 outline-none rounded-md bg-[#000000] text-white"
+              className="title p-2 mb-4 outline-none rounded-md bg-[#000000] text-white"
               spellCheck="false"
               placeholder="Username"
               type="text"
@@ -325,7 +340,7 @@ const Home = () => {
               onChange={handleUsernameChange}
             />
             <textarea
-              className="description bg-gray-100 sec p-3 h-60 outline-none rounded-md bg-[#000000] text-white"
+              className="description sec p-3 h-60 outline-none rounded-md bg-[#000000] text-white"
               spellCheck="false"
               placeholder="Message"
               value={newMessage}
@@ -341,7 +356,7 @@ const Home = () => {
 
             <div className="buttons flex">
               <div
-                className="btn border border-[#000000] border-2 p-1 px-4 font-semibold cursor-pointer text-black ml-auto rounded-lg"
+                className="btn p-1 px-4 font-semibold cursor-pointer text-black ml-auto rounded-lg"
                 onClick={toggleVisibility}
               >
                 Cancel
@@ -405,7 +420,7 @@ const Home = () => {
                 <div>
                   {conversations.map(conversation => (
                     <a
-                      key={conversation.receiverUsername}
+                      key={username === conversation.receiverUsername ? conversation.senderUsername : conversation.receiverUsername}
                       className={`flex items-center mb-2 px-3 py-2 text-sm transition duration-150 ease-in-out border-b border-[#cfdf8f] cursor-pointer focus:outline-none border-[1px] rounded-xl hover:bg-[#cfdf8f] hover:text-black ${activeConversation === conversation.receiverUsername ? 'bg-[#cfdf8f] text-black' : 'text-white'
                         }`}
                       onClick={() => setConversation(conversation)}
@@ -413,7 +428,10 @@ const Home = () => {
                       <img className="object-cover w-10 h-10 rounded-full" src="https://static.vecteezy.com/system/resources/previews/009/292/244/original/default-avatar-icon-of-social-media-user-vector.jpg" alt="Avatar" />
                       <div className="w-full pb-2">
                         <div className="flex justify-between">
-                          <span className="block ml-2 font-semibold">{conversation.receiverUsername}</span>
+                          <span className="block ml-2 font-semibold">
+
+                            {username === conversation.receiverUsername ? conversation.senderUsername : conversation.receiverUsername}
+                          </span>
                           <span className="block ml-2 text-sm">{conversation.lastMessage} Minutes</span>
                         </div>
                         <span className="block ml-2 text-sm">{conversation.preview}</span>

@@ -42,6 +42,7 @@ const Home = () => {
     
             const data = await response.json();
             const authToken = data.token;
+            
     
   
             localStorage.setItem('authToken', authToken);
