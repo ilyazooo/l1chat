@@ -348,6 +348,7 @@ const Home = () => {
 
 
   const handleNewMessageSubmit = async () => {
+    handleLoading();
     if (newMessage.trim() !== '') {
 
       if (await checkExistingUser(newUsername) == false) {
@@ -407,8 +408,9 @@ const Home = () => {
     await fetchConversations();
     setNewMessage("");
     setNewUsername("");
-    toggleVisibility();
 
+    toggleVisibility();
+    handleStopLoading();
   };
 
 
@@ -469,7 +471,7 @@ const Home = () => {
 
 
       {isLoading && (
-        <div className="fixed w-full h-full z-40">
+        <div className="fixed w-full h-full z-50">
 
           <div className={`absolute inset-0 bg-white bg-opacity-5 ${isLoading ? 'backdrop-blur-md' : ''}`}></div>
           <div className={`absolute inset-0 bg-black bg-opacity-5 ${isLoading ? 'backdrop-blur-md' : ''}`}></div>
