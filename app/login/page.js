@@ -124,7 +124,7 @@ const Home = () => {
 
                                             <button type="submit" className="bg-[#cfdf8f] text-black rounded-lg py-3 font-semibold" >Login</button>
 
-                                            <a href="/register"><p className="text-white rounded-lg py-3 font-semibold text-xs flex items-center justify-center underline">Don't have an account yet ? Sign Up</p></a>
+                                            <a href="/register"><p className="text-white rounded-lg py-3 font-semibold text-xs flex items-center justify-center underline">Don&apos;t have an account yet ? Sign Up</p></a>
 
                                         </form>
                                     </div>
