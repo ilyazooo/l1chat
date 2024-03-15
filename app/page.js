@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import jwt_decode from "jwt-decode";
+import crypto from 'crypto';
+import forge from 'node-forge';
 import { useRouter } from 'next/navigation';
+import { encryptPrivateKey, decryptPrivateKey } from '../utils/cryptoUtils.js';
 
 const Home = () => {
 
@@ -13,13 +15,16 @@ const Home = () => {
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [username, setUsername] = useState("");
-  const [receiverUsername, setReceiverUsername] = useState("ilyazooo10");
+  const [receiverUsername, setReceiverUsername] = useState("");
   const [activeConversation, setActiveConversation] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [newMessage, setNewMessage] = useState('');
   const [charCount, setCharCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+
 
   const maxLength = 300;
 
@@ -36,9 +41,9 @@ const Home = () => {
   useEffect(() => {
 
     const fetchData = async () => {
-      
-      if (username != ''){
-      await fetchConversations();
+
+      if (username != '') {
+        await fetchConversations();
       }
     };
 
@@ -52,6 +57,11 @@ const Home = () => {
   const handleStopLoading = () => {
     setIsLoading(false);
   };
+
+  const handlePopupClose = () => {
+    setShowPopup(false);
+  };
+
 
 
 
@@ -96,7 +106,7 @@ const Home = () => {
 
         const data = await response.json();
         setUsername(data.username);
-        console.log(data.username);
+
       } else {
 
         router.push('/login');
@@ -107,33 +117,37 @@ const Home = () => {
     }
   };
 
-  /*
-    const fetchMessages = async () => {
-      //handleLoading();
-      alert(receiverUsername);
-      try {
-        const response = await fetch(`http://localhost:3000/api/messages?senderUsername=${username}&receiverUsername=${receiverUsername}`);
-        if (response.ok) {
-          const data = await response.json();
-          await new Promise(resolve => {
-            setMessages(data, resolve);
-          });
-          scrollToBottom();
-        } else {
-          console.log('Erreur lors de la récupération des messages');
-        }
-      } catch (error) {
-        console.log('Erreur lors de la requête GET:', error);
-      }
-      //handleStopLoading();
-    };
-    */
+
 
   const waitOneSecond = () => {
     return new Promise(resolve => {
       setTimeout(resolve, 2000);
     });
   };
+
+  const encryptMessage = (message, publicKey) => {
+    const encryptedBuffer = crypto.publicEncrypt({
+      key: publicKey,
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: 'sha256'
+    }, Buffer.from(message));
+
+    return encryptedBuffer.toString('hex');
+  };
+
+  // Fonction pour déchiffrer un message avec la clé privée
+  const decryptMessage = (encryptedHexMessage, privateKey) => {
+    const encryptedBuffer = Buffer.from(encryptedHexMessage, 'hex');
+    const decryptedBuffer = crypto.privateDecrypt({
+      key: privateKey,
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: 'sha256'
+    }, encryptedBuffer);
+
+    return decryptedBuffer.toString();
+  };
+
+
 
 
   useEffect(() => {
@@ -142,9 +156,18 @@ const Home = () => {
 
       handleLoading();
       try {
+        const encryptedPrivateKey = localStorage.getItem(`encryptedPrivateKey_${username}`);
+        const privateKey = decryptPrivateKey(encryptedPrivateKey);
+
         const response = await fetch(`http://localhost:3000/api/messages?senderUsername=${username}&receiverUsername=${receiverUsername}`);
+
         if (response.ok) {
           const data = await response.json();
+
+          data.forEach(item => {
+            item.content = decryptMessage(item.content, privateKey);
+          });
+
           setMessages(data);
           scrollToBottom();
         } else {
@@ -161,8 +184,6 @@ const Home = () => {
 
     fetchMessages();
 
-
-
   }, [receiverUsername]);
 
   const toggleVisibility = () => {
@@ -172,11 +193,20 @@ const Home = () => {
 
   const fetchConversations = async () => {
     handleLoading();
-    console.log(username);
+
     try {
       const response = await fetch(`http://localhost:3000/api/conversations?senderUsername=${username}`);
       if (response.ok) {
         const data = await response.json();
+
+        const encryptedPrivateKey = localStorage.getItem(`encryptedPrivateKey_${username}`);
+        const privateKey = decryptPrivateKey(encryptedPrivateKey);
+
+
+        data.forEach(item => {
+          item.preview = decryptMessage(item.preview, privateKey);
+        });
+
         await setConversations(data);
       } else {
         console.log('Erreur lors de la récupération des messages');
@@ -188,9 +218,53 @@ const Home = () => {
   };
 
 
+  const fetchPublicKey = async (receiverUsername) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/getPublicKey?receiverUsername=${receiverUsername}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch public key');
+      }
+      const data = await response.json();
+      return data.publicKey;
+    } catch (error) {
+      console.error('Error fetching public key:', error);
+      return null;
+    }
+  };
+
+  async function checkExistingUser(username) {
+    try {
+      // Appel de l'API pour vérifier si l'utilisateur existe
+      const response = await fetch(`http://localhost:3000/api/checkExistingUser?username=${username}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.exists;
+      } else {
+        console.error(`Erreur ${response.status} lors de la requête : ${response.statusText}`);
+        return false;
+      }
+    } catch (error) {
+      console.error('Erreur lors de la requête :', error);
+      return false;
+    }
+  }
+
+
+
+
   const handleMessageSubmit = async () => {
 
     if (message.trim() !== '') {
+
+      const publicKey = await fetchPublicKey(receiverUsername);
+      const encryptedMessage = encryptMessage(message, publicKey);
+
+
+      const publicKey2 = await fetchPublicKey(username);
+      const encryptedMessage2 = encryptMessage(message, publicKey2);
+
+
       try {
         const response = await fetch('http://localhost:3000/api/messages', {
           method: 'POST',
@@ -200,12 +274,28 @@ const Home = () => {
           body: JSON.stringify({
             senderUsername: username,
             receiverUsername: receiverUsername,
-            content: message,
+            content: encryptedMessage,
             timestamp: new Date().toISOString(),
+            cryptedFromKeyOf: receiverUsername,
           }),
         });
 
-        if (response.ok) {
+        const response2 = await fetch('http://localhost:3000/api/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            senderUsername: username,
+            receiverUsername: receiverUsername,
+            content: encryptedMessage2,
+            timestamp: new Date().toISOString(),
+            cryptedFromKeyOf: username,
+          }),
+        });
+
+
+        if (response.ok && response2.ok) {
           setMessage('');
           console.log('Message envoyé avec succès');
           scrollToBottom();
@@ -221,10 +311,23 @@ const Home = () => {
 
     //await fetchMessages();
     handleLoading();
+
     try {
-      const response = await fetch(`http://localhost:3000/api/messages?senderUsername=${username}&receiverUsername=${receiverUsername}`);
-      if (response.ok) {
-        const data = await response.json();
+      const encryptedPrivateKey = localStorage.getItem(`encryptedPrivateKey_${username}`);
+      const privateKey = decryptPrivateKey(encryptedPrivateKey);
+
+      const response3 = await fetch(`http://localhost:3000/api/messages?senderUsername=${username}&receiverUsername=${receiverUsername}`);
+
+      if (response3.ok) {
+        const data = await response3.json();
+
+
+        data.forEach(item => {
+          item.content = decryptMessage(item.content, privateKey);
+        });
+
+
+
         setMessages(data);
         scrollToBottom();
       } else {
@@ -236,15 +339,25 @@ const Home = () => {
 
     await waitOneSecond();
     handleStopLoading();
-
     await fetchConversations();
-
 
   };
 
 
   const handleNewMessageSubmit = async () => {
     if (newMessage.trim() !== '') {
+
+      if (await checkExistingUser(newUsername) == false) {
+        setPopupMessage("This user doesn't exist")
+        setShowPopup(true);
+        return;
+      }
+      const publicKey = await fetchPublicKey(newUsername);
+      const encryptedMessage = await encryptMessage(newMessage, publicKey);
+
+      const publicKey2 = await fetchPublicKey(username);
+      const encryptedMessage2 = encryptMessage(newMessage, publicKey2);
+
       try {
         const response = await fetch('http://localhost:3000/api/messages', {
           method: 'POST',
@@ -254,12 +367,27 @@ const Home = () => {
           body: JSON.stringify({
             senderUsername: username,
             receiverUsername: newUsername,
-            content: newMessage,
+            content: encryptedMessage,
             timestamp: new Date().toISOString(),
+            cryptedFromKeyOf: newUsername,
           }),
         });
 
-        if (response.ok) {
+        const response2 = await fetch('http://localhost:3000/api/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            senderUsername: username,
+            receiverUsername: newUsername,
+            content: encryptedMessage2,
+            timestamp: new Date().toISOString(),
+            cryptedFromKeyOf: username,
+          }),
+        });
+
+        if (response.ok && response2.ok) {
           setMessage('');
           console.log('Message envoyé avec succès');
           scrollToBottom();
@@ -278,16 +406,13 @@ const Home = () => {
     setNewUsername("");
     toggleVisibility();
 
-
   };
 
 
   const setConversation = async (conversation) => {
     //handleLoading();
     setActiveConversation(username === conversation.receiverUsername ? conversation.senderUsername : conversation.receiverUsername);
-
     await setReceiverUsername(username === conversation.receiverUsername ? conversation.senderUsername : conversation.receiverUsername);
-
     //await fetchMessages();
     scrollToBottom();
     //handleStopLoading();
@@ -295,10 +420,8 @@ const Home = () => {
   };
 
   const handleSignOut = () => {
-
     localStorage.removeItem('authToken');
     router.push('/login');
-
   };
 
 
@@ -307,12 +430,33 @@ const Home = () => {
     scrollToBottom();
   }, [messages]);
 
+
   return (
     <div>
 
+{showPopup && (
+        <div className="fixed top-0 left-0 right-0 bottom-0 flex justify-center items-center z-50 bg-gray-500 bg-opacity-50">
+          <div className="relative bg-[#000000] rounded-lg shadow p-5 m-5">
+            <button type="button" onClick={handlePopupClose} className="absolute top-3 end-2.5 text-[#cfdf8f] bg-transparent hover:bg-[#cfdf8f] hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" >
+              <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+              </svg>
+              
+            </button>
+            <div className="p-4 md:p-5 text-center">
+              <svg className="mx-auto mb-4 text-[#cfdf8f] w-12 h-12 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+              </svg>
+              <h3 className=" text-lg font-normal text-[#cfdf8f] ">{popupMessage}</h3> 
+              
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {isLoading && (
-        <div className="fixed w-full h-full z-50">
+        <div className="fixed w-full h-full z-40">
 
           <div className={`absolute inset-0 bg-white bg-opacity-5 ${isLoading ? 'backdrop-blur-md' : ''}`}></div>
           <div className={`absolute inset-0 bg-black bg-opacity-5 ${isLoading ? 'backdrop-blur-md' : ''}`}></div>
@@ -329,7 +473,7 @@ const Home = () => {
 
 
       {isVisible && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-40 flex justify-center items-center z-40">
           <div className="editor mx-auto w-10/12 flex flex-col text-gray-800 p-4 shadow-lg max-w-2xl rounded-md bg-[#cfdf8f]">
             <input
               className="title p-2 mb-4 outline-none rounded-md bg-[#000000] text-white"

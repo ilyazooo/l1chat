@@ -13,7 +13,7 @@ export default async function handler(req, res) {
 
         switch (req.method) {
             case 'POST':
-                const { username, password } = req.body;
+                const { username, password, publicKey } = req.body;
 
 
                 const existingUser = await db.collection('users').findOne({ username: username });
@@ -22,27 +22,13 @@ export default async function handler(req, res) {
                 }
 
 
-                const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-                    modulusLength: 2048,
-                    publicKeyEncoding: {
-                        type: 'spki',
-                        format: 'pem'
-                    },
-                    privateKeyEncoding: {
-                        type: 'pkcs8',
-                        format: 'pem'
-                    }
-                });
-
-
                 const hashedPassword = await bcrypt.hash(password, 10);
 
 
                 const result = await db.collection('users').insertOne({
                     username: username,
                     password: hashedPassword,
-                    publicKey: publicKey,
-                    privateKey: privateKey
+                    publicKey: publicKey
                 });
 
                 

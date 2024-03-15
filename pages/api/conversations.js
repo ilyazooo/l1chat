@@ -14,8 +14,6 @@ export default async function handler(req, res) {
             case 'GET':
                 const senderUsername = req.query.senderUsername;
 
-                console.log("Sender username:", senderUsername);
-
                 const conversations = await db.collection('messages')
                     .aggregate([
                         {
@@ -23,7 +21,8 @@ export default async function handler(req, res) {
                                 $or: [
                                     { senderUsername: senderUsername },
                                     { receiverUsername: senderUsername }
-                                ]
+                                ],
+                                cryptedFromKeyOf: senderUsername
                             }
                         },
                         {
@@ -45,13 +44,9 @@ export default async function handler(req, res) {
                     ])
                     .toArray();
 
-                console.log("Conversations:", conversations);
-
                 conversations.forEach(conversation => {
                     conversation.lastMessage = differenceInMinutes(new Date(), parseISO(conversation.lastMessage));
                 });
-
-                console.log("Modified conversations:", conversations);
 
                 res.status(200).json(conversations);
                 break;

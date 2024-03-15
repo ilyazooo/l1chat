@@ -6,8 +6,12 @@ import { useRouter } from 'next/navigation';
 
 const Home = () => {
 
-    
+
     const router = useRouter();
+    const [showPopup, setShowPopup] = useState(false);
+    const [popupMessage, setPopupMessage] = useState("");
+    
+
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -21,9 +25,14 @@ const Home = () => {
         });
     };
 
+    const handlePopupClose = () => {
+        setShowPopup(false);
+      };
+    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
+
         try {
             const response = await fetch('http://localhost:3000/api/login', {
                 method: 'POST',
@@ -35,28 +44,53 @@ const Home = () => {
                     password: formData.password,
                 }),
             });
-    
+
             if (!response.ok) {
+                setPopupMessage("Username or password is incorrect")
+                setShowPopup(true);
                 throw new Error('Erreur lors de la connexion');
-            }
-    
+            }else{
+
             const data = await response.json();
             const authToken = data.token;
-            
-    
-  
+
+
+
             localStorage.setItem('authToken', authToken);
-    
+
             router.push('/');
-    
-        } catch (error) {
-            alert('Erreur lors de la connexion : ' + error.message);
         }
+
+        } catch (error) {
+            //console.log('Erreur lors de la connexion : ' + error.message);
+        }
+
+        
     };
 
 
     return (
         <div>
+
+            {showPopup && (
+                <div className="fixed top-0 left-0 right-0 bottom-0 flex justify-center items-center z-50 bg-gray-500 bg-opacity-50">
+                    <div className="relative bg-[#000000] rounded-lg shadow p-5 m-5">
+                        <button type="button" onClick={handlePopupClose} className="absolute top-3 end-2.5 text-[#cfdf8f] bg-transparent hover:bg-[#cfdf8f] hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" >
+                            <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                            </svg>
+
+                        </button>
+                        <div className="p-4 md:p-5 text-center">
+                            <svg className="mx-auto mb-4 text-[#cfdf8f] w-12 h-12 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            <h3 className=" text-lg font-normal text-[#cfdf8f] ">{popupMessage}</h3>
+
+                        </div>
+                    </div>
+                </div>
+            )}
 
 
             <div className="relative min-h-screen  grid bg-black ">

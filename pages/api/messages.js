@@ -24,6 +24,7 @@ export default async function handler(req, res) {
                       { senderUsername: senderUsername, receiverUsername: receiverUsername },
                       { senderUsername: receiverUsername, receiverUsername: senderUsername },
                     ],
+                    cryptedFromKeyOf: senderUsername 
                   })
                   .sort({ timestamp: 1 })
                   .toArray();

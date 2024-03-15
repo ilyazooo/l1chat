@@ -1,0 +1,50 @@
+const crypto = require('crypto');
+
+// Fonction pour déchiffrer un message avec la clé privée
+const decryptHexMessage = (encryptedHexMessage, privateKey) => {
+    const encryptedBuffer = Buffer.from(encryptedHexMessage, 'hex');
+    const decryptedBuffer = crypto.privateDecrypt({
+        key: privateKey,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+        oaepHash: 'sha256'
+    }, encryptedBuffer);
+
+    return decryptedBuffer.toString();
+};
+
+// Message chiffré en hexadécimal
+const encryptedHexMessage = '16ba912db32456cc1271e8190e0af785d21462f124fa6848540449ed4a9ff92e1fa58f733665d6d0fdd18987a04f4e96d63b1f595eb3cad0ed96e7c69d5f37313fcf7b2103a7fdc2cb79788a828e1df9ab1230dad79564a2426febfee0f7cd43d49cc92ff4efb45def4ac2f036694fa2bb47a5d91475982b32f337dd6e9f359ab1ff9f945b02ce1321c697ca3e55ad5318f680e60b335ce8ce141e8235ae76a19a5c57195df7960833f71c7171453c206bbc87d10ffd5a0052a02b971c572c91d5fb7144b3562d5c9bebb9f4295ee48159cfb80dc461df911b982aff94d2a7ba0769a4fc284c847b761df696db84f426ca625c363c2ead90eedcb650ddac5bd3';
+
+// Clé privée
+const privateKey = `-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQD2/AccE50Xczy5
+Yj/Ze2M3ZEVqGZCux7HualArbFyGXHiJ/xq/+Xc/GEuivnk4IY/WyT7PEWfbVTnB
+9B94bmzTfXTEN+IDniDqiKhfEQCKf08co0k6CFEOorPEm5V8wFG5hJETkrWrPpxh
+mhVJMK/mXvqLX26rvId4UTjxE5A85S43ejWVVGPh8nAozN1VS3mDD9CRdtZXWQpM
+fiD5jrrCDka/hNUpOaSghihNj4HMhBOZmgwgmxhyk7UB3nkuGOw+c/OfYFXfXbje
+9uCZX1cd7XZplLaFYAE8kh9kgw2wtZD76t1pKXnUsHft6oztRqCueOJO9zdNwIPS
+GKbd9VnXAgMBAAECggEAXXodpr61of53aSKKT+GnN3u32eQ7IitqaHXMSeMFUcUF
+yhTHJwlf3H1xgvLcJiZtrjkUkIJh8F1dMs8WahpBDfpZizorTHs4sgtuziw9LC3q
+30fdmx0ysHtb1nmcJk8Tn0dRMTtBjsJvpXEPxVer+2DPKpi/5jfAfgUfq/5fhOvq
+L2YGmfxziFSpMAYXhR3qrgl3A2QnlxC3ZfZ6mky1qUp/OBlRzc+UFfMpVFiZSCls
+udtlMOEL3E4zlvUvf8+Dz/8rQtYjyzRWLWwX+kezBaya5QowHfRRUrR+amA47ikW
+YKcnWZNDFx/yA/VgW5ksdJ1lkwy5XuS3yxZJ9EaOwQKBgQD7fdHfSCCd4tn1vVZi
+pxriX9z4EmyhCwZTc6PdJVD7l5rlgLWv1m66CyzrCPWwevWYjY1MFw9w03WcZCei
+xq3bOq156EDp5cZpN43XS8RCNY+n1EHDMUNZv2hgKee2oiycniRkNPTXpSoOhWRg
+tq6FsND+dpSknWCEmMaTpRVMPwKBgQD7aYYXogI3pG9INjbdpUH5EBUxdCZKplwP
+agcibCwT5omV0F6rYWSN9+aE+5doCZI6cg98FOAdD0OVMr2ABzzKlwDbs7kX/Xhq
+rTU1/SWy4taY2zTCnMRF/KtoTBV23KS7n+Vahcvj1+PInALYmpFAdTxIPhWTGxJb
+H5RTGlHsaQKBgQCRr9B9ZV4nuHuFJNq/KYikbN4oAxxUqntOqqXZfT2NkcSUgNw/
+cZwRQFoUCcuyIXjWl+Grm4xBUu5F26suW6PpZPOLtGSuWoJ2/0y21NhrdnWyxn4W
+IhqfCgff9UabARWQ4Pe56QeRSMe1Q8bjU9CD9+sKDg2L0vNPvOUEMNTGpwKBgQC+
+y+5/sOuN3rS1UK+Ctg/DPHlY9pS4wlfLOuP/M6if0a1IjMHLvjXZp/DBq03UHq9i
+u30U5aLPau4XJFK7/sIb3U1BbrthgXMJQjnHpz4c7BmAF5uKtf4ePwq2NEd11S0P
+VuFwOWnql8S+Uee3ClaBXHdLPBKTeVAM54JhLvBNQQKBgC8xlPTKrDJYAc6qv2de
+uVldla2pcCZoypFbdiIuvfB/+sSmZMXIKqGyJK3KivL5GfMC8l04jbM4a/+aiz9o
+UAh5tdT55HfkNtXVz9ooeoN0HaVlRyEjLmiDcTHY3de+jYuMLEEblcl9YnjT8q/7
+E3Y3XNuctGNgLXjpP5ruj9S6
+-----END PRIVATE KEY-----`;
+
+// Déchiffrement du message
+const decryptedMessage = decryptHexMessage(encryptedHexMessage, privateKey);
+console.log('Decrypted Message:', decryptedMessage);
