@@ -53,7 +53,7 @@ const Home = () => {
 
         try {
             // Appeler votre API pour générer les clés RSA
-            const response = await axios.get('http://localhost:3000/api/generateKeysApi');
+            const response = await axios.get('../api/generateKeysApi');
             const { publicKey, privateKey } = response.data;
 
             const encryptedPrivateKey = encryptPrivateKey(privateKey);
@@ -64,7 +64,7 @@ const Home = () => {
             localStorage.setItem(`encryptedPrivateKey_${formData.username}`, encryptedPrivateKey);
 
             // Envoyer les données d'inscription au serveur
-            const registerResponse = await axios.post('http://localhost:3000/api/register', {
+            const registerResponse = await axios.post('../api/register', {
                 username: formData.username,
                 password: formData.password,
                 publicKey: publicKey,

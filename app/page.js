@@ -26,6 +26,7 @@ const Home = () => {
   const [popupMessage, setPopupMessage] = useState("");
 
 
+
   const maxLength = 300;
 
   useEffect(() => {
@@ -92,7 +93,7 @@ const Home = () => {
 
     try {
 
-      const response = await fetch('http://localhost:3000/api/valideToken', {
+      const response = await fetch('../api/valideToken', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -159,7 +160,7 @@ const Home = () => {
         const encryptedPrivateKey = localStorage.getItem(`encryptedPrivateKey_${username}`);
         const privateKey = decryptPrivateKey(encryptedPrivateKey);
 
-        const response = await fetch(`http://localhost:3000/api/messages?senderUsername=${username}&receiverUsername=${receiverUsername}`);
+        const response = await fetch(`../api/messages?senderUsername=${username}&receiverUsername=${receiverUsername}`);
 
         if (response.ok) {
           const data = await response.json();
@@ -179,10 +180,12 @@ const Home = () => {
 
       await waitOneSecond();
       handleStopLoading();
+      scrollToDiv();
 
     };
 
     fetchMessages();
+    
 
   }, [receiverUsername]);
 
@@ -195,7 +198,7 @@ const Home = () => {
     handleLoading();
 
     try {
-      const response = await fetch(`http://localhost:3000/api/conversations?senderUsername=${username}`);
+      const response = await fetch(`../api/conversations?senderUsername=${username}`);
       if (response.ok) {
         const data = await response.json();
 
@@ -220,7 +223,7 @@ const Home = () => {
 
   const fetchPublicKey = async (receiverUsername) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/getPublicKey?receiverUsername=${receiverUsername}`);
+      const response = await fetch(`../api/getPublicKey?receiverUsername=${receiverUsername}`);
       if (!response.ok) {
         throw new Error('Failed to fetch public key');
       }
@@ -235,7 +238,7 @@ const Home = () => {
   async function checkExistingUser(username) {
     try {
       // Appel de l'API pour vérifier si l'utilisateur existe
-      const response = await fetch(`http://localhost:3000/api/checkExistingUser?username=${username}`);
+      const response = await fetch(`../api/checkExistingUser?username=${username}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -266,7 +269,7 @@ const Home = () => {
 
 
       try {
-        const response = await fetch('http://localhost:3000/api/messages', {
+        const response = await fetch('../api/messages', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -280,7 +283,7 @@ const Home = () => {
           }),
         });
 
-        const response2 = await fetch('http://localhost:3000/api/messages', {
+        const response2 = await fetch('../api/messages', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -316,7 +319,7 @@ const Home = () => {
       const encryptedPrivateKey = localStorage.getItem(`encryptedPrivateKey_${username}`);
       const privateKey = decryptPrivateKey(encryptedPrivateKey);
 
-      const response3 = await fetch(`http://localhost:3000/api/messages?senderUsername=${username}&receiverUsername=${receiverUsername}`);
+      const response3 = await fetch(`../api/messages?senderUsername=${username}&receiverUsername=${receiverUsername}`);
 
       if (response3.ok) {
         const data = await response3.json();
@@ -359,7 +362,7 @@ const Home = () => {
       const encryptedMessage2 = encryptMessage(newMessage, publicKey2);
 
       try {
-        const response = await fetch('http://localhost:3000/api/messages', {
+        const response = await fetch('../api/messages', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -373,7 +376,7 @@ const Home = () => {
           }),
         });
 
-        const response2 = await fetch('http://localhost:3000/api/messages', {
+        const response2 = await fetch('../api/messages', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -409,11 +412,21 @@ const Home = () => {
   };
 
 
+  const scrollToDiv = () => {
+    const element = document.getElementById('Conversation'); 
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+  
+
+
   const setConversation = async (conversation) => {
     //handleLoading();
     setActiveConversation(username === conversation.receiverUsername ? conversation.senderUsername : conversation.receiverUsername);
     await setReceiverUsername(username === conversation.receiverUsername ? conversation.senderUsername : conversation.receiverUsername);
     //await fetchMessages();
+    //scrollToDiv();
     scrollToBottom();
     //handleStopLoading();
 
@@ -588,8 +601,8 @@ const Home = () => {
           </div>
 
           {activeConversation && (
-            <div className=" lg:col-span-2 lg:block rounded-xl p-5 z-10">
-              <div className="w-full  rounded-xl p-5">
+            <div   className=" lg:col-span-2 lg:block rounded-xl p-5 z-10">
+              <div  className="w-full  rounded-xl p-5">
                 <div className="relative flex items-center p-3  rounded-xl justify-center">
 
                   <img className="object-cover w-10 h-10 rounded-full"
@@ -613,7 +626,7 @@ const Home = () => {
                   </ul>
                 </div>
 
-                <div className="flex items-center justify-between w-full p-3 ">
+                <div id="Conversation" className="flex items-center justify-between w-full p-3 ">
 
 
                   <input

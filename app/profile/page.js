@@ -63,7 +63,7 @@ const Home = () => {
 
         try {
 
-            const response = await fetch('http://localhost:3000/api/valideToken', {
+            const response = await fetch('../api/valideToken', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ const Home = () => {
     async function checkExistingUser(username) {
         try {
             // Appel de l'API pour vérifier si l'utilisateur existe
-            const response = await fetch(`http://localhost:3000/api/checkExistingUser?username=${username}`);
+            const response = await fetch(`../api/checkExistingUser?username=${username}`);
 
             if (response.ok) {
                 const data = await response.json();
@@ -117,7 +117,7 @@ const Home = () => {
 
     async function checkUserCredentials(username, password) {
         try {
-            const response = await fetch(`http://localhost:3000/api/checkUserCredentials?username=${username}&password=${password}`);
+            const response = await fetch(`../api/checkUserCredentials?username=${username}&password=${password}`);
 
             if (response.ok) {
                 const data = await response.json();
@@ -156,19 +156,27 @@ const Home = () => {
     };
 
     
-    const handleUpdateProfile = async (password) => {
+    const handleUpdateProfile = async (username1, password) => {
 
         try {
-            const response = await fetch('http://localhost:3000/api/checkUserCredentials', {
+            const response = await fetch('../api/changeUserCredentials', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    currentUsername,
+                    username1,
                     password,
                 }),
             });
+
+            if (response.ok) {
+             
+                console.log('Profil mis à jour avec succès.');
+            } else {
+           
+                console.error('Échec de la mise à jour du profil:', response.statusText);
+            }
 
         } catch (error) {
             console.error('Error updating profile:', error);
@@ -240,7 +248,7 @@ const Home = () => {
 
 
         if(!isNewPrivateKey && (isNewPassword || isNewName)){
-            handleUpdateProfile(newPassword);
+            handleUpdateProfile(username, newPassword);
             setPopupMessage("New changes applied.")
             setShowPopup(true);
             setImportedPrivateKey("");
@@ -258,7 +266,7 @@ const Home = () => {
                 console.log(error);
             }
 
-            handleUpdateProfile(newPassword);
+            handleUpdateProfile(username, newPassword);
             setPopupMessage("New changes applied.");
             setShowPopup(true);
             setImportedPrivateKey("");
