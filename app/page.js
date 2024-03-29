@@ -352,7 +352,8 @@ const Home = () => {
     if (newMessage.trim() !== '') {
 
       if (await checkExistingUser(newUsername) == false) {
-        setPopupMessage("This user doesn't exist")
+        setPopupMessage("This user doesn't exist");
+        handleStopLoading();
         setShowPopup(true);
         return;
       }
