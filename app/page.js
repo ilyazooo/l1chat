@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import forge from 'node-forge';
 import { useRouter } from 'next/navigation';
 import { encryptPrivateKey, decryptPrivateKey } from '../utils/cryptoUtils.js';
+import { signMessage, verifySignature } from '@/utils/signatureUtils.js';
 
 const Home = () => {
 
@@ -165,8 +166,22 @@ const Home = () => {
         if (response.ok) {
           const data = await response.json();
 
-          data.forEach(item => {
+          data.forEach(async item => {
             item.content = decryptMessage(item.content, privateKey);
+            if(item.signature != "none"){
+              if(item.senderUsername == receiverUsername){
+                const receiverPublicKey = await fetchPublicKey(receiverUsername);
+                console.log(receiverPublicKey);
+                try{
+                const responseSignature = verifySignature(item.content, item.signature, receiverPublicKey);
+                }catch(error){
+                  //console.log(error);
+                  item.content = item.content + " -- The authenticity of this message's signature has been compromised.";
+                  
+                }
+                
+              }
+            }
           });
 
           setMessages(data);
@@ -267,6 +282,10 @@ const Home = () => {
       const publicKey2 = await fetchPublicKey(username);
       const encryptedMessage2 = encryptMessage(message, publicKey2);
 
+      const encryptedPrivateKey = localStorage.getItem(`encryptedPrivateKey_${username}`);
+      const privateKeyPem = decryptPrivateKey(encryptedPrivateKey);
+      const signature = signMessage(message, privateKeyPem);
+
 
       try {
         const response = await fetch('../api/messages', {
@@ -280,6 +299,7 @@ const Home = () => {
             content: encryptedMessage,
             timestamp: new Date().toISOString(),
             cryptedFromKeyOf: receiverUsername,
+            signature: signature,
           }),
         });
 
@@ -294,6 +314,7 @@ const Home = () => {
             content: encryptedMessage2,
             timestamp: new Date().toISOString(),
             cryptedFromKeyOf: username,
+            signature: "none",
           }),
         });
 
@@ -325,8 +346,22 @@ const Home = () => {
         const data = await response3.json();
 
 
-        data.forEach(item => {
+        data.forEach(async item => {
           item.content = decryptMessage(item.content, privateKey);
+            if(item.signature != "none"){
+              if(item.senderUsername == receiverUsername){
+                const receiverPublicKey = await fetchPublicKey(receiverUsername);
+                console.log(receiverPublicKey);
+                try{
+                const responseSignature = verifySignature(item.content, item.signature, receiverPublicKey);
+                }catch(error){
+                  //console.log(error);
+                  item.content = item.content + " -- The authenticity of this message's signature has been compromised.";
+                  
+                }
+                
+              }
+            }
         });
 
 
@@ -363,6 +398,11 @@ const Home = () => {
       const publicKey2 = await fetchPublicKey(username);
       const encryptedMessage2 = encryptMessage(newMessage, publicKey2);
 
+      const encryptedPrivateKey = localStorage.getItem(`encryptedPrivateKey_${username}`);
+      const privateKeyPem = decryptPrivateKey(encryptedPrivateKey);
+      const signature = signMessage(newMessage, privateKeyPem);
+
+
       try {
         const response = await fetch('../api/messages', {
           method: 'POST',
@@ -375,6 +415,7 @@ const Home = () => {
             content: encryptedMessage,
             timestamp: new Date().toISOString(),
             cryptedFromKeyOf: newUsername,
+            signature : signature,
           }),
         });
 
@@ -389,6 +430,7 @@ const Home = () => {
             content: encryptedMessage2,
             timestamp: new Date().toISOString(),
             cryptedFromKeyOf: username,
+            signature : "none",
           }),
         });
 
