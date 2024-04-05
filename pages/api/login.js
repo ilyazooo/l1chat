@@ -1,10 +1,9 @@
 import { MongoClient } from 'mongodb';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-
+import { checkRateLimit, incrementRateLimit } from '../../utils/rateLimit';
 
 function generateAuthToken(username) {
-    
     const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '1h' });
     return token;
 }
@@ -15,9 +14,14 @@ export default async function handler(req, res) {
     }
 
     const { username, password } = req.body;
-
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    const ipAddress = req.socket.remoteAddress;
+    const isRateLimited = await checkRateLimit(ipAddress);
+    if (isRateLimited) {
+        return res.status(429).json({ error: 'Too many login attempts. Please try again later.' });
     }
 
     const client = new MongoClient(process.env.MONGODB_URI);
@@ -29,12 +33,14 @@ export default async function handler(req, res) {
         const existingUser = await db.collection('users').findOne({ username });
 
         if (!existingUser) {
+            await incrementRateLimit(ipAddress);
             return res.status(401).json({ error: 'Invalid username or password' });
         }
 
         const passwordMatch = await bcrypt.compare(password, existingUser.password);
 
         if (!passwordMatch) {
+            await incrementRateLimit(ipAddress);
             return res.status(401).json({ error: 'Invalid username or password' });
         }
 
