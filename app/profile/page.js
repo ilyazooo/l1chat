@@ -217,7 +217,7 @@ const Home = () => {
         if (newPassword.length <= 8 && newPassword != "") {
 
             setPopupMessage("New password must be at least 8 characters long.")
-            setShowPopup(true);
+            setShowPopup(true); 
             return;
         }
 
