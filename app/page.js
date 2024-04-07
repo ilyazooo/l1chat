@@ -109,6 +109,13 @@ const Home = () => {
         const data = await response.json();
         setUsername(data.username);
 
+        const encryptedPrivateKey = localStorage.getItem(`encryptedPrivateKey_${data.username}`);
+
+        if (!encryptedPrivateKey) {
+            setPopupMessage("No private key found in this browser. Please make sure to import your private key in l1chat.vercel.app/profile")
+            setShowPopup(true);
+        }
+
       } else {
 
         router.push('/login');
