@@ -91,8 +91,8 @@ const Home = () => {
             });
 
             if (!response.ok) {
-                const errorData = await response.json(); // Récupérer les données d'erreur de la réponse
-                setPopupMessage(errorData.error); // Utiliser le message d'erreur retourné par l'API
+                const errorData = await response.json();
+                setPopupMessage(errorData.error);
                 setShowPopup(true);
                 throw new Error('Erreur lors de la connexion');
             }else{
@@ -108,7 +108,7 @@ const Home = () => {
         }
 
         } catch (error) {
-            //console.log('Erreur lors de la connexion : ' + error.message);
+            console.log('Erreur lors de la connexion : ' + error.message);
         }
 
         
