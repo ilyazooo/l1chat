@@ -279,7 +279,7 @@ const Home = () => {
 
 
   const handleMessageSubmit = async () => {
-
+    handleLoading();
     if (message.trim() !== '') {
 
       const publicKey = await fetchPublicKey(receiverUsername);
@@ -341,7 +341,7 @@ const Home = () => {
     }
 
     //await fetchMessages();
-    handleLoading();
+   
 
     try {
       const encryptedPrivateKey = localStorage.getItem(`encryptedPrivateKey_${username}`);
@@ -378,6 +378,7 @@ const Home = () => {
       } else {
        
       }
+      
     } catch (error) {
      
     }

@@ -133,7 +133,7 @@ const Home = () => {
 
 
 
-                localStorage.setItem('authToken', authToken);
+                
 
                 const verificationResponse = await fetch(`../api/checkVerified?username=${formData.username}`);
                 if (!verificationResponse.ok) {
@@ -162,6 +162,8 @@ const Home = () => {
                     setShowPopup2(true);
                     return;
                 }
+
+                localStorage.setItem('authToken', authToken);
 
                 handleStopLoading();
                 router.push('/');
