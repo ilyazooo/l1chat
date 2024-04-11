@@ -16,6 +16,7 @@ const Home = () => {
     const recaptchaWidgetId = useRef(null);
     const [verificationCode, setVerificationCode] = useState('');
     const [showBalise, setShowBalise] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         username: '',
@@ -40,6 +41,15 @@ const Home = () => {
     const handlePopupClose = () => {
         setShowPopup(false);
     };
+
+    const handleLoading = () => {
+        setIsLoading(true);
+    };
+
+    const handleStopLoading = () => {
+        setIsLoading(false);
+    };
+
 
 
     const handlePopup2Close = () => {
@@ -85,6 +95,7 @@ const Home = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+
         // Récupérez le token reCAPTCHA
         const recaptchaToken = window.grecaptcha.getResponse(recaptchaWidgetId.current);
         if (!recaptchaToken) {
@@ -96,7 +107,7 @@ const Home = () => {
         try {
 
 
-
+            handleLoading();
 
             const response = await fetch('../api/login', {
                 method: 'POST',
@@ -113,6 +124,7 @@ const Home = () => {
                 const errorData = await response.json();
                 setPopupMessage(errorData.error);
                 setShowPopup(true);
+                handleStopLoading();
                 throw new Error('Erreur lors de la connexion');
             } else {
 
@@ -125,6 +137,7 @@ const Home = () => {
 
                 const verificationResponse = await fetch(`../api/checkVerified?username=${formData.username}`);
                 if (!verificationResponse.ok) {
+                    handleStopLoading();
                     throw new Error('Erreur lors de la vérification de la vérification de l\'utilisateur');
                 }
                 const verificationData = await verificationResponse.json();
@@ -132,25 +145,25 @@ const Home = () => {
 
                 if (!isVerified) {
 
-                    
+                    handleStopLoading();
                     const response = await axios.post('../api/sendRegisterCode', {
                         username: formData.username,
                     });
 
                     if (!response.data.ok) {
-                       
+                        console.log("Erreur lors de l'envoi du code de vérification par e-mail");
 
                     } else {
-                   
+                        console.log("Code de vérification envoyé avec succès par e-mail");
 
                     }
 
-
+                    
                     setShowPopup2(true);
                     return;
                 }
 
-
+                handleStopLoading();
                 router.push('/');
             }
 
@@ -166,6 +179,8 @@ const Home = () => {
     const handleSubmit2 = async (e) => {
 
         e.preventDefault();
+
+        handleLoading();
 
         try {
 
@@ -185,13 +200,14 @@ const Home = () => {
             if (!response.ok) {
 
                 if (response.status === 400) {
+                    handleStopLoading();
                     setShowBalise(true);
                     return;
 
                 }
             }
 
-
+            handleStopLoading();
             setVerificationCode("");
             setShowPopup2(false);
             setShowBalise(false);
@@ -209,6 +225,24 @@ const Home = () => {
 
     return (
         <div>
+
+
+            {isLoading && (
+                <div className="fixed w-full h-full z-50">
+
+                    <div className={`absolute inset-0 bg-white bg-opacity-5 ${isLoading ? 'backdrop-blur-md' : ''}`}></div>
+                    <div className={`absolute inset-0 bg-black bg-opacity-5 ${isLoading ? 'backdrop-blur-md' : ''}`}></div>
+
+
+                    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
+                    </div>
+
+                </div>
+            )}
+
+
+
             {showPopup2 && (
                 <div className="fixed top-0 left-0 right-0 bottom-0 flex justify-center items-center z-40 bg-gray-500 bg-opacity-50">
                     <div className="relative bg-[#000000] rounded-lg shadow p-5 m-5">

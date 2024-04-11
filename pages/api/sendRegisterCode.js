@@ -67,11 +67,13 @@ async function sendVerificationCodeByEmail(email, verificationCode) {
     });
 
     const mailOptions = {
-        from: 'L1Chat',
+        from: 'ilyassdu78260hr@hotmail.fr',
         to: email,
         subject: 'Votre code de vérification L1CHAT',
         text: `Votre code de vérification est : ${verificationCode}`,
     };
+
+    console.log(mailOptions);
 
     await transporter.sendMail(mailOptions);
 }

@@ -11,6 +11,16 @@ const Home = () => {
     const router = useRouter();
     const [showPopup, setShowPopup] = useState(false);
     const [popupMessage, setPopupMessage] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleLoading = () => {
+        setIsLoading(true);
+    };
+
+    const handleStopLoading = () => {
+        setIsLoading(false);
+    };
+
 
     const [formData, setFormData] = useState({
         username: '',
@@ -36,6 +46,7 @@ const Home = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+
         if (formData.username.length <= 4) {
             setPopupMessage("Username must be at least 4 characters long. Special characters are not allowed.")
             setShowPopup(true);
@@ -53,6 +64,8 @@ const Home = () => {
             setShowPopup(true);
             return;
         }
+
+        handleLoading();
 
         try {
             const response = await axios.get('../api/generateKeysApi');
@@ -78,25 +91,21 @@ const Home = () => {
             });
 
             if (registerResponse.status == 400) {
+                handleStopLoading();
                 setPopupMessage("Username already exists. Please choose another one.")
                 setShowPopup(true);
                 return;
             }
 
             if (registerResponse.status == 401) {
+                handleStopLoading();
                 setPopupMessage("An account with this email already exists. Please choose another one.")
                 setShowPopup(true);
                 return;
             }
 
 
-            if (registerResponse.status !== 201) {
-                console.log("REGISTER RESPONSE:" + registerResponse);
 
-            }
-
-
-       
 
             setFormData({
                 username: '',
@@ -105,7 +114,8 @@ const Home = () => {
                 confirmPassword: '',
             });
 
-            console.log("Verification code sent.");
+
+            handleStopLoading();
             router.push('/login');
 
         } catch (error) {
@@ -117,6 +127,20 @@ const Home = () => {
 
     return (
         <div>
+
+            {isLoading && (
+                <div className="fixed w-full h-full z-50">
+
+                    <div className={`absolute inset-0 bg-white bg-opacity-5 ${isLoading ? 'backdrop-blur-md' : ''}`}></div>
+                    <div className={`absolute inset-0 bg-black bg-opacity-5 ${isLoading ? 'backdrop-blur-md' : ''}`}></div>
+
+
+                    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300"></div>
+                    </div>
+
+                </div>
+            )}
 
             {showPopup && (
                 <div className="fixed top-0 left-0 right-0 bottom-0 flex justify-center items-center z-50 bg-gray-500 bg-opacity-50">
