@@ -145,7 +145,7 @@ const Home = () => {
 
                 if (!isVerified) {
 
-                    handleStopLoading();
+                    
                     const response = await axios.post('../api/sendRegisterCode', {
                         username: formData.username,
                     });
@@ -157,6 +157,8 @@ const Home = () => {
                         console.log("Code de vérification envoyé avec succès par e-mail");
 
                     }
+
+                    handleStopLoading();
 
                     
                     setShowPopup2(true);
