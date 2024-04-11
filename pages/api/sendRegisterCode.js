@@ -55,17 +55,14 @@ async function getVerificationCodeByUsername(username) {
 async function sendVerificationCodeByEmail(email, verificationCode) {
     const transporter = nodemailer.createTransport({
         host: 'smtp.office365.com',
-        port: 587,
-        secure: false,
+        port: 465, 
+        secure: true, 
         auth: {
             user: 'l1chat.service@outlook.fr',
             pass: 'l1chatservice78',
         },
-        tls: {
-            ciphers: 'SSLv3',
-        },
     });
-
+    
     const mailOptions = {
         from: 'L1Chat',
         to: email,
