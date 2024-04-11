@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 export default async function handler(req, res) {
     try {
@@ -53,30 +53,23 @@ async function getVerificationCodeByUsername(username) {
 }
 
 async function sendVerificationCodeByEmail(email, verificationCode) {
-    const transporter = nodemailer.createTransport({
-        host: 'smtp.office365.com',
-        port: 587,
-        secure: false,
-        auth: {
-            user: 'ilyassdu78260hr@hotmail.fr',
-            pass: 'rabat2014',
-        },
-        tls: {
-            ciphers: 'SSLv3',
-        },
-    });
+    const resend = new Resend('re_fbtebka2_4k7NhSFxT6ni4Y8vPuyNNZPd');
 
-    const mailOptions = {
-        from: 'ilyassdu78260hr@hotmail.fr',
-        to: email,
+    const { data, error } = await resend.emails.send({
+        from: 'L1CHAT <l1chat.service@gamblift.com>',
+        to: [email],
         subject: 'Votre code de vérification L1CHAT',
         text: `Votre code de vérification est : ${verificationCode}`,
-    };
+    });
 
-    console.log(mailOptions);
+    if (error) {
+        console.log(error);
+        throw new Error(error);
+    }
 
-    await transporter.sendMail(mailOptions);
+    console.log({data});
 }
+
 
 async function storeVerificationCodeInDatabase(username, verificationCode) {
     const client = new MongoClient(process.env.MONGODB_URI, {});
