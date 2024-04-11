@@ -14,9 +14,11 @@ const Home = () => {
 
     const [formData, setFormData] = useState({
         username: '',
+        email: '',
         password: '',
         confirmPassword: '',
     });
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -26,9 +28,10 @@ const Home = () => {
         });
     };
 
+
     const handlePopupClose = () => {
         setShowPopup(false);
-      };
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -57,27 +60,57 @@ const Home = () => {
 
             const encryptedPrivateKey = encryptPrivateKey(privateKey);
 
-            console.log(publicKey, privateKey);
 
             localStorage.setItem(`encryptedPrivateKey_${formData.username}`, encryptedPrivateKey);
 
-            const registerResponse = await axios.post('../api/register', {
-                username: formData.username,
-                password: formData.password,
-                publicKey: publicKey,
+
+            const registerResponse = await fetch('../api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: formData.username,
+                    email: formData.email,
+                    password: formData.password,
+                    publicKey: publicKey,
+                }),
             });
-    
-            if (registerResponse.status !== 201) {
-                throw new Error('Erreur lors de l\'inscription');
+
+            if (registerResponse.status == 400) {
+                setPopupMessage("Username already exists. Please choose another one.")
+                setShowPopup(true);
+                return;
             }
-    
-            console.log('Inscription réussie:', registerResponse);
-    
+
+            if (registerResponse.status == 401) {
+                setPopupMessage("An account with this email already exists. Please choose another one.")
+                setShowPopup(true);
+                return;
+            }
+
+
+            if (registerResponse.status !== 201) {
+                console.log("REGISTER RESPONSE:" + registerResponse);
+
+            }
+
+
+       
+
+            setFormData({
+                username: '',
+                email: '',
+                password: '',
+                confirmPassword: '',
+            });
+
+            console.log("Verification code sent.");
             router.push('/login');
-            
+
         } catch (error) {
-            alert('Erreur lors de l\'inscription : ' + error.message);
-            console.error('Erreur lors de l\'inscription:', error);
+            //alert('Erreur lors de l\'inscription : ' + error.message);
+            //console.error('Erreur lors de l\'inscription:', error);
         }
     };
 
@@ -85,7 +118,7 @@ const Home = () => {
     return (
         <div>
 
-{showPopup && (
+            {showPopup && (
                 <div className="fixed top-0 left-0 right-0 bottom-0 flex justify-center items-center z-50 bg-gray-500 bg-opacity-50">
                     <div className="relative bg-[#000000] rounded-lg shadow p-5 m-5">
                         <button type="button" onClick={handlePopupClose} className="absolute top-3 end-2.5 text-[#cfdf8f] bg-transparent hover:bg-[#cfdf8f] hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" >
@@ -128,6 +161,13 @@ const Home = () => {
                                                 value={formData.username}
                                                 onChange={handleChange}
                                                 required placeholder="Username" className="border rounded-lg py-3 px-3 mt-4 bg-black border-[#cfdf8f] placeholder-white-500 text-white" />
+
+                                            <input type="email"
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleChange}
+                                                required placeholder="Email" className="border rounded-lg py-3 px-3 mt-4 bg-black border-[#cfdf8f] placeholder-white-500 text-white" />
+
                                             <input type="password"
                                                 name="password"
                                                 value={formData.password}

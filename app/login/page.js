@@ -11,7 +11,11 @@ const Home = () => {
     const router = useRouter();
     const [showPopup, setShowPopup] = useState(false);
     const [popupMessage, setPopupMessage] = useState("");
+    const [showPopup2, setShowPopup2] = useState(false);
+    const [popup2Message, setPopup2Message] = useState("");
     const recaptchaWidgetId = useRef(null);
+    const [verificationCode, setVerificationCode] = useState('');
+    const [showBalise, setShowBalise] = useState(false);
 
     const [formData, setFormData] = useState({
         username: '',
@@ -27,8 +31,19 @@ const Home = () => {
         }));
     };
 
+    const handleChange2 = (event) => {
+        const { name, value } = event.target;
+
+        setVerificationCode(value);
+    }
+
     const handlePopupClose = () => {
         setShowPopup(false);
+    };
+
+
+    const handlePopup2Close = () => {
+        setShowPopup2(false);
     };
 
     useEffect(() => {
@@ -59,7 +74,7 @@ const Home = () => {
             recaptchaToken: token,
         }));
     };
-    
+
     const onRecaptchaExpired = () => {
         setFormData((prevFormData) => ({
             ...prevFormData,
@@ -79,6 +94,10 @@ const Home = () => {
         }
 
         try {
+
+
+
+
             const response = await fetch('../api/login', {
                 method: 'POST',
                 headers: {
@@ -95,28 +114,132 @@ const Home = () => {
                 setPopupMessage(errorData.error);
                 setShowPopup(true);
                 throw new Error('Erreur lors de la connexion');
-            }else{
+            } else {
 
-            const data = await response.json();
-            const authToken = data.token;
+                const data = await response.json();
+                const authToken = data.token;
 
 
 
-            localStorage.setItem('authToken', authToken);
+                localStorage.setItem('authToken', authToken);
 
-            router.push('/');
-        }
+                const verificationResponse = await fetch(`../api/checkVerified?username=${formData.username}`);
+                if (!verificationResponse.ok) {
+                    throw new Error('Erreur lors de la vérification de la vérification de l\'utilisateur');
+                }
+                const verificationData = await verificationResponse.json();
+                const isVerified = verificationData.isVerified;
+
+                if (!isVerified) {
+
+                    
+                    const response = await axios.post('../api/sendRegisterCode', {
+                        username: formData.username,
+                    });
+
+                    if (!response.data.ok) {
+                       
+
+                    } else {
+                   
+
+                    }
+
+
+                    setShowPopup2(true);
+                    return;
+                }
+
+
+                router.push('/');
+            }
 
         } catch (error) {
-            console.log('Erreur lors de la connexion : ' + error.message);
+
         }
 
-        
+
     };
+
+
+
+    const handleSubmit2 = async (e) => {
+
+        e.preventDefault();
+
+        try {
+
+            const response = await fetch('/api/checkRegisterCode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    verificationCode: verificationCode,
+                    username: formData.username,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+
+                if (response.status === 400) {
+                    setShowBalise(true);
+                    return;
+
+                }
+            }
+
+
+            setVerificationCode("");
+            setShowPopup2(false);
+            setShowBalise(false);
+            setPopupMessage("Account successfully verified. You can now connect to L1chat.")
+            setShowPopup(true);
+
+
+
+        } catch (error) {
+
+        }
+
+    }
 
 
     return (
         <div>
+            {showPopup2 && (
+                <div className="fixed top-0 left-0 right-0 bottom-0 flex justify-center items-center z-40 bg-gray-500 bg-opacity-50">
+                    <div className="relative bg-[#000000] rounded-lg shadow p-5 m-5">
+                        <button type="button" onClick={handlePopup2Close} className="absolute top-3 end-2.5 text-[#cfdf8f] bg-transparent hover:bg-[#cfdf8f] hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center" >
+                            <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                            </svg>
+                        </button>
+                        <div className="p-4 md:p-5 text-center">
+                            <svg className="mx-auto mb-4 text-[#cfdf8f] w-12 h-12 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            <h3 className=" text-lg font-normal text-[#cfdf8f] ">Your account is not yet verified. We have just sent a verification code to your email address.</h3>
+                            <form onSubmit={handleSubmit2}>
+                                <input
+                                    type="number"
+                                    name="verificationCode"
+                                    value={verificationCode}
+                                    onChange={handleChange2}
+                                    required
+                                    placeholder="Code"
+                                    className="border rounded-lg py-3 px-3 bg-black border-[#cfdf8f] placeholder-white-500 text-white mt-5"
+                                />
+                                <button type="submit" className='bg-[#cfdf8f] text-black rounded-lg py-3 font-semibold p-2 m-5'>Submit</button>
+                            </form>
+                            {showBalise && <h3 className=" text-lg font-normal text-[#FF3333] ">Code is incorrect.</h3>}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {showPopup && (
                 <div className="fixed top-0 left-0 right-0 bottom-0 flex justify-center items-center z-50 bg-gray-500 bg-opacity-50">
                     <div className="relative bg-[#000000] rounded-lg shadow p-5 m-5">
@@ -159,7 +282,7 @@ const Home = () => {
                                                 onChange={handleChange}
                                                 required placeholder="Password" className="border rounded-lg py-3 px-3 bg-black border-[#cfdf8f] placeholder-white-500 text-white" />
                                             <div id="recaptcha-container" className="flex justify-center my-4"></div>
-                                            <button type="submit"  className={`bg-[#cfdf8f] text-black rounded-lg py-3 font-semibold ${!formData.recaptchaToken && 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                                            <button type="submit" className={`bg-[#cfdf8f] text-black rounded-lg py-3 font-semibold ${!formData.recaptchaToken && 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
                                                 disabled={!formData.recaptchaToken} >
                                                 Login
                                             </button>

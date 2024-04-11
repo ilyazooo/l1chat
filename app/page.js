@@ -121,7 +121,7 @@ const Home = () => {
         router.push('/login');
       }
     } catch (error) {
-      console.log('Erreur lors de la vérification du token :', error);
+      
       router.push('/login');
     }
   };
@@ -178,7 +178,7 @@ const Home = () => {
             if(item.signature != "none"){
               if(item.senderUsername == receiverUsername){
                 const receiverPublicKey = await fetchPublicKey(receiverUsername);
-                console.log(receiverPublicKey);
+                
                 try{
                 const responseSignature = verifySignature(item.content, item.signature, receiverPublicKey);
                 }catch(error){
@@ -194,10 +194,10 @@ const Home = () => {
           setMessages(data);
           scrollToBottom();
         } else {
-          console.log('Erreur lors de la récupération des messages');
+          
         }
       } catch (error) {
-        console.log('Erreur lors de la requête GET:', error);
+        
       }
 
       await waitOneSecond();
@@ -234,10 +234,10 @@ const Home = () => {
 
         await setConversations(data);
       } else {
-        console.log('Erreur lors de la récupération des messages');
+       
       }
     } catch (error) {
-      console.log('Erreur lors de la requête GET:', error);
+    
     }
     handleStopLoading();
   };
@@ -328,16 +328,16 @@ const Home = () => {
 
         if (response.ok && response2.ok) {
           setMessage('');
-          console.log('Message envoyé avec succès');
+          
           scrollToBottom();
         } else {
-          console.error('Erreur lors de l\'envoi du message');
+          
         }
       } catch (error) {
-        console.error('Erreur lors de la requête POST:', error);
+        
       }
     } else {
-      console.warn('Le message est vide');
+     
     }
 
     //await fetchMessages();
@@ -358,7 +358,7 @@ const Home = () => {
             if(item.signature != "none"){
               if(item.senderUsername == receiverUsername){
                 const receiverPublicKey = await fetchPublicKey(receiverUsername);
-                console.log(receiverPublicKey);
+                
                 try{
                 const responseSignature = verifySignature(item.content, item.signature, receiverPublicKey);
                 }catch(error){
@@ -376,10 +376,10 @@ const Home = () => {
         setMessages(data);
         scrollToBottom();
       } else {
-        console.log('Erreur lors de la récupération des messages');
+       
       }
     } catch (error) {
-      console.log('Erreur lors de la requête GET:', error);
+     
     }
 
     await waitOneSecond();
@@ -443,16 +443,21 @@ const Home = () => {
 
         if (response.ok && response2.ok) {
           setMessage('');
-          console.log('Message envoyé avec succès');
+         
           scrollToBottom();
         } else {
-          console.error('Erreur lors de l\'envoi du message');
+          
         }
       } catch (error) {
-        console.error('Erreur lors de la requête POST:', error);
+        
       }
     } else {
-      console.warn('Le message est vide');
+      
+      handleStopLoading();
+      setPopupMessage("Can't send empty message.");
+      setShowPopup(true);
+      return;
+      
     }
 
     await fetchConversations();
