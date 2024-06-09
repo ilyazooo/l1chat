@@ -53,7 +53,7 @@ async function getVerificationCodeByUsername(username) {
 }
 
 async function sendVerificationCodeByEmail(email, verificationCode) {
-    const resend = new Resend('re_fbtebka2_4k7NhSFxT6ni4Y8vPuyNNZPd');
+    const resend = new Resend(''); //CHANGE CODE HERE 
 
     const { data, error } = await resend.emails.send({
         from: 'L1CHAT <l1chat.service@gamblift.com>',
